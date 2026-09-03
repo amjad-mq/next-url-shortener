@@ -1,13 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { createUrlSchema } from "@/lib/validation";
 
 export default function Home() {
   const [url, setUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log("Submitted URL:", url);
+    setError(null);
+
+    const result = createUrlSchema.safeParse({ url });
+
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      return;
+    }
+
+    console.log("Valid URL:", result.data.url);
     // Backend logic Phase 7 mein add hogi
   }
 
@@ -26,8 +37,7 @@ export default function Home() {
           className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-lg sm:flex-row"
         >
           <input
-            type="url"
-            required
+            type="text"
             placeholder="https://example.com/very/long/link"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -40,6 +50,10 @@ export default function Home() {
             Shorten URL
           </button>
         </form>
+
+        {error && (
+          <p className="mt-3 text-center text-sm text-red-400">{error}</p>
+        )}
       </div>
     </main>
   );
