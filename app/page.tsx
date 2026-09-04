@@ -55,6 +55,7 @@ export default function Home() {
           <p className="mt-3 text-center text-sm text-red-400">{error}</p>
         )}
       </div>
+      
     </main>
   );
 }
