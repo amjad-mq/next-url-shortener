@@ -6,10 +6,13 @@ import { createUrlSchema } from "@/lib/validation";
 export default function Home() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [shortUrl, setShortUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setShortUrl(null);
 
     const result = createUrlSchema.safeParse({ url });
 
@@ -18,8 +21,29 @@ export default function Home() {
       return;
     }
 
-    console.log("Valid URL:", result.data.url);
-    // Backend logic Phase 7 mein add hogi
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/urls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: result.data.url }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong");
+        return;
+      }
+
+      setShortUrl(data.shortUrl);
+      setUrl("");
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -45,17 +69,36 @@ export default function Home() {
           />
           <button
             type="submit"
-            className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold transition hover:bg-blue-500"
+            disabled={loading}
+            className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold transition hover:bg-blue-500 disabled:opacity-50"
           >
-            Shorten URL
+            {loading ? "Shortening..." : "Shorten URL"}
           </button>
         </form>
 
         {error && (
           <p className="mt-3 text-center text-sm text-red-400">{error}</p>
         )}
+
+        {shortUrl && (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900 p-4">
+            <a
+              href={shortUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="truncate text-blue-400 hover:underline"
+            >
+              {shortUrl}
+            </a>
+            <button
+              onClick={() => navigator.clipboard.writeText(shortUrl)}
+              className="rounded-md bg-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-600"
+            >
+              Copy
+            </button>
+          </div>
+        )}
       </div>
-      
     </main>
   );
 }
