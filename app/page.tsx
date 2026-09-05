@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createUrlSchema } from "@/lib/validations";
+import Link from "next/link";
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -51,9 +52,7 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-4 text-slate-50">
       <div className="w-full max-w-lg">
-        <h1 className="mb-2 text-center text-3xl font-bold">
-          URL Shortener
-        </h1>
+        <h1 className="mb-2 text-center text-3xl font-bold">URL Shortener</h1>
         <p className="mb-8 text-center text-slate-400">
           Paste your long URL and get a short one instantly
         </p>
@@ -107,6 +106,11 @@ export default function Home() {
             </button>
           </div>
         )}
+        <p className="mt-6 text-center text-sm text-slate-500">
+          <Link href="/dashboard" className="hover:text-slate-300 hover:underline">
+            View Dashboard →
+          </Link>
+        </p>
       </div>
     </main>
   );
