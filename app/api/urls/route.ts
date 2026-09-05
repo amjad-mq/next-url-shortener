@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
-import { createUrlSchema } from "@/lib/validation";
+import { createUrlSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -11,18 +11,34 @@ export async function POST(request: Request) {
   if (!result.success) {
     return NextResponse.json(
       { error: result.error.issues[0].message },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
-  const { url } = result.data;
+  const { url, customAlias } = result.data;
 
-  let shortCode = nanoid(7);
+  let shortCode: string;
 
-  let existing = await prisma.url.findUnique({ where: { shortCode } });
-  while (existing) {
+  if (customAlias) {
+    const existing = await prisma.url.findUnique({
+      where: { shortCode: customAlias },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "This alias is already taken" },
+        { status: 409 }
+      );
+    }
+
+    shortCode = customAlias;
+  } else {
     shortCode = nanoid(7);
-    existing = await prisma.url.findUnique({ where: { shortCode } });
+    let existing = await prisma.url.findUnique({ where: { shortCode } });
+    while (existing) {
+      shortCode = nanoid(7);
+      existing = await prisma.url.findUnique({ where: { shortCode } });
+    }
   }
 
   const created = await prisma.url.create({

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { createUrlSchema } from "@/lib/validation";
+import { createUrlSchema } from "@/lib/validations";
 
 export default function Home() {
   const [url, setUrl] = useState("");
+  const [customAlias, setCustomAlias] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [shortUrl, setShortUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,7 @@ export default function Home() {
     setError(null);
     setShortUrl(null);
 
-    const result = createUrlSchema.safeParse({ url });
+    const result = createUrlSchema.safeParse({ url, customAlias });
 
     if (!result.success) {
       setError(result.error.issues[0].message);
@@ -27,7 +28,7 @@ export default function Home() {
       const res = await fetch("/api/urls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: result.data.url }),
+        body: JSON.stringify(result.data),
       });
 
       const data = await res.json();
@@ -39,6 +40,7 @@ export default function Home() {
 
       setShortUrl(data.shortUrl);
       setUrl("");
+      setCustomAlias("");
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -58,14 +60,21 @@ export default function Home() {
 
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-lg sm:flex-row"
+          className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-lg"
         >
           <input
             type="text"
             placeholder="https://example.com/very/long/link"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-blue-500"
+            className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-blue-500"
+          />
+          <input
+            type="text"
+            placeholder="Custom alias (optional)"
+            value={customAlias}
+            onChange={(e) => setCustomAlias(e.target.value)}
+            className="rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm outline-none focus:border-blue-500"
           />
           <button
             type="submit"
